@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roleplay AI — Immersive AI Storytelling</title>
+  <meta name="description" content="Create immersive AI-powered roleplays with your favourite characters. Powered by Grok AI.">
+  <link rel="preload" as="image" href="assets/bg.jpg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-logo" id="topbar-logo" style="cursor:pointer">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="url(#lg1)" opacity=".15"/>
+      <path d="M9 10c0-1.105.895-2 2-2h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1l-2 3-2-3H11a2 2 0 0 1-2-2v-2z" fill="url(#lg1)"/>
+      <circle cx="14" cy="20" r="2" fill="url(#lg2)" opacity=".7"/>
+      <defs>
+        <linearGradient id="lg1" x1="8" y1="8" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
+        </linearGradient>
+        <linearGradient id="lg2" x1="12" y1="18" x2="16" y2="22" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    Roleplay AI
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" id="btn-back" style="display:none">← Back</button>
+    <button class="btn btn-ghost btn-sm" id="btn-settings">⚙ Settings</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     APP VIEWS
+══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── HOME ──────────────────────────── -->
+  <div id="view-home" class="view home-view">
+    <div class="home-bg"></div>
+    <div class="home-bg-overlay"></div>
+    <div class="particles" id="particles"></div>
+    <div class="home-content">
+      <div class="home-badge">🎭 Immersive Uncensored Roleplay AI</div>
+      <h1 class="home-title">Your Story.<br>Your Characters.</h1>
+      <p class="home-subtitle">
+        Step into immersive adult roleplays where local AI brings your characters to life.<br>
+        Mention a body part and see actress images appear inline — instantly.
+      </p>
+      <div class="home-cards">
+        <div class="home-option" id="btn-new-rp">
+          <div class="home-option-icon new">🎭</div>
+          <h3>New Roleplay</h3>
+          <p>Craft a fresh story, define your characters, and begin your adventure.</p>
+        </div>
+        <div class="home-option" id="btn-continue-rp">
+          <div class="home-option-icon cont">📖</div>
+          <h3>Continue Story</h3>
+          <p>Pick up where you left off. Your ongoing stories are waiting for you.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIST ──────────────────────────── -->
+  <div id="view-list" class="view list-view">
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <h2>📖 Your Stories</h2>
+          <p class="text-muted" style="margin-top:.3rem;font-size:.9rem">Continue an existing roleplay or start a new one.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-list-new">+ New Roleplay</button>
+      </div>
+      <div class="rp-grid" id="rp-grid"></div>
+      <div id="rp-empty" class="empty-state" style="display:none">
+        <div class="empty-icon">🎭</div>
+        <h3>No roleplays yet</h3>
+        <p style="margin-bottom:1.5rem">Create your first story to get started.</p>
+        <button class="btn btn-primary" onclick="window.App.navigate('#setup')">+ Create First Story</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETUP ─────────────────────────── -->
+  <div id="view-setup" class="view setup-view">
+    <div class="setup-container">
+      <div class="page-header" style="padding-bottom:0">
+        <div>
+          <h2 id="setup-title">New Roleplay</h2>
+          <p class="text-muted" style="margin-top:.3rem;font-size:.9rem">Set up your story in 3 easy steps.</p>
+        </div>
+      </div>
+
+      <div class="setup-steps">
+        <div class="setup-step active" data-step="1">① Plot</div>
+        <div class="setup-step" data-step="2">② Characters</div>
+        <div class="setup-step" data-step="3">③ Review</div>
+      </div>
+
+      <!-- Step 1: Plot -->
+      <div id="setup-panel-1" class="setup-panel active">
+        <div class="card">
+          <div class="field-group">
+            <label class="field-label" for="input-rp-title">Story Title</label>
+            <input type="text" id="input-rp-title" placeholder="e.g. The Palace Intrigue">
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <label class="field-label" for="input-plot">Plot / Story Setting</label>
+            <textarea id="input-plot" rows="7"
+              placeholder="Describe your story world and the plot. The more detail, the more immersive the AI will be.&#10;&#10;Example: A forbidden romance between a royal guard and the queen of a crumbling empire..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Characters -->
+      <div id="setup-panel-2" class="setup-panel">
+        <div class="card">
+          <div class="field-group">
+            <label class="field-label">Number of Female Characters</label>
+            <div class="char-count-row">
+              <div class="count-selector">
+                <button class="count-btn" id="char-count-decrement">−</button>
+                <div class="count-display" id="char-count-display">1</div>
+                <button class="count-btn" id="char-count-increment">+</button>
+              </div>
+              <span class="text-muted" style="font-size:.85rem">Up to 8 characters. Grok plays all female roles; you play the male lead.</span>
+            </div>
+          </div>
+        </div>
+        <div class="char-cards" id="char-cards-container"></div>
+      </div>
+
+      <!-- Step 3: Review -->
+      <div id="setup-panel-3" class="setup-panel">
+        <div class="card">
+          <div class="review-section">
+            <h4>Story</h4>
+            <div id="review-title" style="font-family:'Cinzel',serif;font-size:1.1rem;margin-bottom:.75rem"></div>
+            <div class="review-plot" id="review-plot"></div>
+          </div>
+          <div class="divider"></div>
+          <div class="review-section" style="margin-bottom:0">
+            <h4>Characters</h4>
+            <div class="review-chars" id="review-chars"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-nav">
+        <button class="btn btn-ghost" id="setup-prev" style="display:none">← Previous</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" id="setup-next">Next →</button>
+        <button class="btn btn-primary" id="setup-create" style="display:none">🎭 Start Roleplay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PLAY ──────────────────────────── -->
+  <div id="view-play" class="view play-view">
+    <div class="play-header">
+      <div class="play-header-info">
+        <div class="play-title" id="play-title">Story Title</div>
+        <div class="play-chars-strip" id="play-chars-strip"></div>
+      </div>
+      <div class="play-header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="window.UI.openDrawer()">✏ Characters</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.App.navigate('#list')">📖 Stories</button>
+      </div>
+    </div>
+    <div class="play-body">
+      <div class="chat-area">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-bar">
+          <div class="chat-input-wrap">
+            <textarea id="chat-input" rows="1"
+              placeholder="Write your action or dialogue… (Enter to send, Shift+Enter for new line)"></textarea>
+            <button class="send-btn" id="send-btn" title="Send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- ══════════════════════════════════════
+     SETTINGS MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙ AI & App Settings</div>
+      <button class="modal-close" onclick="window.UI.closeModal('settings-modal')">✕</button>
+    </div>
+
+    <!-- Provider Switcher Tabs -->
+    <div class="provider-tabs">
+      <button type="button" class="provider-tab active" id="tab-openrouter" data-provider="openrouter">
+        🚀 OpenRouter (Cloud · Fast & Uncensored)
+      </button>
+      <button type="button" class="provider-tab" id="tab-ollama" data-provider="ollama">
+        🦙 Ollama (Local PC)
+      </button>
+    </div>
+
+    <form id="settings-form">
+      <input type="hidden" id="input-ai-provider" value="openrouter">
+
+      <!-- ── OpenRouter Panel ── -->
+      <div id="panel-openrouter" class="provider-panel">
+        <div class="api-info" style="border-left:3px solid var(--accent)">
+          <strong>⚡ OpenRouter Cloud AI</strong> — Instant 1-second responses, 100% uncensored adult roleplay, zero CPU lag.<br>
+          <strong>Step 1:</strong> Get a key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a><br>
+          <strong>Step 2:</strong> Paste your key below, pick a model, and click Save.
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="input-openrouter-key">
+            OpenRouter API Key <span style="color:var(--accent);font-size:.75rem">* (sk-or-v1-...)</span>
+          </label>
+          <div style="position:relative">
+            <input type="password" id="input-openrouter-key" placeholder="sk-or-v1-..." autocomplete="off">
+            <button type="button" id="btn-toggle-key" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;color:var(--text-faint);font-size:.85rem;cursor:pointer">👁</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="input-openrouter-model">Model</label>
+          <select id="input-openrouter-model" style="appearance:auto;cursor:pointer">
+            <option value="gryphe/mythomax-l2-13b">gryphe/mythomax-l2-13b 👑 (Top Pick — Legendary Adult Roleplay)</option>
+            <option value="meta-llama/llama-3.1-8b-instruct">meta-llama/llama-3.1-8b-instruct ⚡ (Fast & Fluent English)</option>
+            <option value="aion-labs/aion-rp-llama-3.1-8b">aion-labs/aion-rp-llama-3.1-8b 🎭 (Dedicated Roleplay Fine-tune)</option>
+            <option value="nousresearch/hermes-3-llama-3.1-70b">nousresearch/hermes-3-llama-3.1-70b ⭐ (Hermes 3 Flagship 70B)</option>
+            <option value="meta-llama/llama-3.3-70b-instruct">meta-llama/llama-3.3-70b-instruct (Meta 70B Intelligence)</option>
+            <option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free 🎁 (100% Free Cloud Tier)</option>
+            <option value="custom">custom (type below)</option>
+          </select>
+        </div>
+
+        <div class="field-group" id="group-openrouter-custom" style="display:none">
+          <label class="field-label" for="input-openrouter-model-custom" style="font-size:.75rem;color:var(--text-faint)">Custom OpenRouter Model ID</label>
+          <input type="text" id="input-openrouter-model-custom" placeholder="e.g. anthropic/claude-3.5-sonnet">
+        </div>
+
+        <div style="margin-bottom:1.25rem">
+          <button type="button" class="btn btn-ghost" id="btn-test-openrouter" style="width:100%">🔌 Test API Key & Credits</button>
+        </div>
+      </div>
+
+      <!-- ── Ollama Panel ── -->
+      <div id="panel-ollama" class="provider-panel" style="display:none">
+        <div class="api-info">
+          <strong>🦙 Ollama (Local AI)</strong> — 100% free, runs locally on your PC.<br>
+          <em>Note:</em> Generation speed depends on your CPU/GPU hardware.
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="input-ollama-url">Ollama Server URL</label>
+          <input type="text" id="input-ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="input-ollama-model">Ollama Model</label>
+          <select id="input-ollama-model" style="appearance:auto;cursor:pointer">
+            <option value="dolphin-phi">dolphin-phi ⚡ (Ultra Fast — Recommended on CPU)</option>
+            <option value="dolphin-mistral">dolphin-mistral ⭐ (Uncensored 7B)</option>
+            <option value="dolphin-llama3">dolphin-llama3 (Uncensored Llama 3)</option>
+            <option value="llama3.2">llama3.2</option>
+            <option value="mistral">mistral</option>
+            <option value="custom">custom (type below)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="input-ollama-model-custom" style="font-size:.75rem;color:var(--text-faint)">Or type a custom model name</label>
+          <input type="text" id="input-ollama-model-custom" placeholder="e.g. dolphin-mistral" style="margin-top:.3rem">
+        </div>
+
+        <div style="margin-bottom:1.25rem">
+          <button type="button" class="btn btn-ghost" id="btn-test-ollama" style="width:100%">🔌 Test Ollama Connection</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Image Search Section -->
+      <div style="margin-bottom:.5rem;font-size:.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">
+        🖼 Actress Photos & Image Search
+      </div>
+      <div class="api-info" style="margin-bottom:1rem;font-size:.78rem">
+        ✅ <strong>Actress photos are automatically fetched for free</strong> from Wikipedia without any setup!<br>
+        Direct 1-click <strong>Pinterest</strong> and <strong>Google Images</strong> combo buttons are automatically added.<br>
+        <em>Optional:</em> If you want inline Google Custom Search, enter your credentials below.
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="input-cse-key" style="font-size:.8rem">Google CSE API Key (Optional)</label>
+        <input type="password" id="input-cse-key" placeholder="AIza… (leave blank to skip)">
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label class="field-label" for="input-cse-id" style="font-size:.8rem">Google Search Engine ID / cx (Optional)</label>
+        <input type="text" id="input-cse-id" placeholder="e.g. 017576662512468…">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.5rem">
+        <button type="button" class="btn btn-ghost" onclick="window.UI.closeModal('settings-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-settings">💾 Save Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     EDIT CHARACTERS DRAWER
+══════════════════════════════════════ -->
+<div class="drawer-overlay" id="edit-drawer-overlay"></div>
+<div class="drawer" id="edit-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">✏ Edit Characters</div>
+    <button class="modal-close" onclick="window.UI.closeDrawer()">✕</button>
+  </div>
+  <div id="drawer-char-list"></div>
+  <div style="margin-top:1.5rem;display:flex;gap:.75rem">
+    <button class="btn btn-ghost" style="flex:1" onclick="window.UI.closeDrawer()">Cancel</button>
+    <button class="btn btn-primary" style="flex:1" id="drawer-save-btn">Save Changes</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LIGHTBOX
+══════════════════════════════════════ -->
+<div class="lightbox" id="lightbox">
+  <img src="" alt="Preview">
+  <div class="lightbox-label"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOAST
+══════════════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════════════════════════════
+     SCRIPTS — Load in order (NO modules)
+══════════════════════════════════════ -->
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/imageSearch.js"></script>
+<script src="views/home.js"></script>
+<script src="views/list.js"></script>
+<script src="views/setup.js"></script>
+<script src="views/play.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
