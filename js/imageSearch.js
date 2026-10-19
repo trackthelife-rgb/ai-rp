@@ -33,11 +33,22 @@ window.ImageSearch = {
     return [...new Set(unique.map(m => map[m] || m))];
   },
 
-  // Query local Pinterest helper server (real Pinterest photos)
+  // Helper to determine the correct Pinterest API endpoint
+  getPinterestEndpoint(actress, bodyPart) {
+    const params = `actress=${encodeURIComponent(actress)}&part=${encodeURIComponent(bodyPart)}`;
+    // If running on a live web server (https://... or http://... like Vercel)
+    if (window.location.protocol.startsWith('http')) {
+      return `/api/pinterest?${params}`;
+    }
+    // Fallback when opened directly as file:/// in browser
+    return `http://localhost:3333/api/pinterest?${params}`;
+  },
+
+  // Query Pinterest helper server (real Pinterest photos)
   async searchPinterestServer(actress, bodyPart) {
     try {
-      const endpoint = `http://localhost:3333/api/pinterest?actress=${encodeURIComponent(actress)}&part=${encodeURIComponent(bodyPart)}`;
-      const res = await fetch(endpoint, { signal: AbortSignal.timeout(6000) });
+      const endpoint = this.getPinterestEndpoint(actress, bodyPart);
+      const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return [];
       const data = await res.json();
       return (data.images || []).map(img => ({
