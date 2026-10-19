@@ -1,11 +1,14 @@
 // ═══════════════════════════════════════════
-// app.js — SPA Router (no ES modules)
+// app.js — SPA Router & Application Lifecycle
 // ═══════════════════════════════════════════
 
 window.App = {
   currentView: null,
 
   navigate(path) {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     location.hash = path;
   },
 
@@ -16,6 +19,11 @@ window.App = {
   },
 
   handleRoute() {
+    // 1. Always reset scroll to the very top when navigating views
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     const { view, id } = this.parseRoute();
 
     if (this.currentView === 'play' && view !== 'play') {
@@ -25,9 +33,26 @@ window.App = {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     this.currentView = view;
 
-    // Topbar back button
+    // 2. Active navbar links
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    if (view === 'home') document.getElementById('nav-home')?.classList.add('active');
+    if (view === 'list') document.getElementById('nav-stories')?.classList.add('active');
+    if (view === 'setup') document.getElementById('nav-new')?.classList.add('active');
+
+    // 3. Render Topbar User Widget
+    window.UI.renderUserWidget();
+
+    // 4. Topbar back button
     const backBtn = document.getElementById('btn-back');
     if (backBtn) backBtn.style.display = (view !== 'home') ? 'inline-flex' : 'none';
+
+    // 5. Auth gate for creating/playing stories if not logged in
+    if ((view === 'setup' || view === 'play') && !window.Storage.isLoggedIn()) {
+      window.UI.openAuthModal('signup');
+      window.UI.toast('Please sign in or create an account to start your roleplay 🔒', 'info');
+      this.navigate('#home');
+      return;
+    }
 
     switch (view) {
       case 'home':
@@ -51,6 +76,66 @@ window.App = {
       default:
         this.navigate('#home');
     }
+
+    // Secondary scroll reset in case DOM rendered asynchronously
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  },
+
+  initAuth() {
+    let mode = 'login';
+    const tabLogin  = document.getElementById('auth-tab-login');
+    const tabSignup = document.getElementById('auth-tab-signup');
+    const form      = document.getElementById('auth-form');
+
+    tabLogin?.addEventListener('click', () => {
+      mode = 'login';
+      window.UI.setAuthMode('login');
+    });
+    tabSignup?.addEventListener('click', () => {
+      mode = 'signup';
+      window.UI.setAuthMode('signup');
+    });
+
+    // Password visibility toggle
+    document.getElementById('btn-toggle-auth-pw')?.addEventListener('click', () => {
+      const input = document.getElementById('auth-input-password');
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      document.getElementById('btn-toggle-auth-pw').textContent = isPass ? '🔒' : '👁';
+    });
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-input-email').value.trim();
+      const pass  = document.getElementById('auth-input-password').value.trim();
+      const name  = document.getElementById('auth-input-name')?.value.trim();
+
+      try {
+        if (mode === 'signup') {
+          const user = window.Storage.signUp(email, pass, name);
+          window.UI.closeModal('auth-modal');
+          window.UI.renderUserWidget();
+          window.UI.toast(`Welcome, ${user.name}! Account created and roleplays synced 🎭`, 'success', 4000);
+        } else {
+          const user = window.Storage.login(email, pass);
+          window.UI.closeModal('auth-modal');
+          window.UI.renderUserWidget();
+          window.UI.toast(`Welcome back, ${user.name}! Stories loaded 📖`, 'success', 4000);
+        }
+        form.reset();
+        this.handleRoute();
+      } catch (err) {
+        window.UI.toast(err.message, 'error', 5000);
+      }
+    });
+
+    document.getElementById('auth-modal')?.addEventListener('click', e => {
+      if (e.target === document.getElementById('auth-modal')) window.UI.closeModal('auth-modal');
+    });
   },
 
   initSettings() {
@@ -98,53 +183,38 @@ window.App = {
             opt.textContent = label;
             select.appendChild(opt);
           });
-          const customOpt = document.createElement('option');
-          customOpt.value = 'custom';
-          customOpt.textContent = 'custom (type below)';
-          select.appendChild(customOpt);
-
-          const target = selectedModel || 'dolphin-phi';
-          const match = Array.from(select.options).find(o => o.value === target || o.value.startsWith(target));
-          if (match) select.value = match.value;
+          if (selectedModel) select.value = selectedModel;
         }
       } catch (_) {}
     };
 
-    const fillFields = () => {
+    // Open Settings button
+    document.getElementById('btn-settings').addEventListener('click', async () => {
       const s = window.Storage.getSettings();
-      switchProvider(s.aiProvider || 'openrouter');
+      document.getElementById('input-ai-provider').value = s.aiProvider;
+      switchProvider(s.aiProvider);
 
-      // OpenRouter fields
-      document.getElementById('input-openrouter-key').value = s.openrouterKey || '';
-      let orModel = s.openrouterModel || 'gryphe/mythomax-l2-13b';
-      if (orModel === 'nousresearch/hermes-3-llama-3.1-8b') orModel = 'gryphe/mythomax-l2-13b';
-      const orOption = Array.from(orSelect.options).find(o => o.value === orModel);
-      if (orOption) {
-        orSelect.value = orModel;
+      document.getElementById('input-openrouter-key').value = s.openrouterKey;
+      const orModels = ['gryphe/mythomax-l2-13b', 'meta-llama/llama-3.1-8b-instruct', 'aion-labs/aion-rp-llama-3.1-8b', 'nousresearch/hermes-3-llama-3.1-70b', 'meta-llama/llama-3.3-70b-instruct', 'google/gemma-4-31b-it:free'];
+      if (orModels.includes(s.openrouterModel)) {
+        orSelect.value = s.openrouterModel;
         document.getElementById('group-openrouter-custom').style.display = 'none';
       } else {
         orSelect.value = 'custom';
-        document.getElementById('input-openrouter-model-custom').value = orModel;
         document.getElementById('group-openrouter-custom').style.display = 'block';
+        document.getElementById('input-openrouter-model-custom').value = s.openrouterModel;
       }
 
-      // Ollama fields
-      const currentModel = s.ollamaModel || 'dolphin-phi';
-      document.getElementById('input-ollama-url').value   = s.ollamaUrl   || 'http://localhost:11434';
-      document.getElementById('input-ollama-model').value = currentModel;
-      populateOllamaModels(currentModel);
+      document.getElementById('input-ollama-url').value = s.ollamaUrl;
+      await populateOllamaModels(s.ollamaModel);
 
-      // Images
-      document.getElementById('input-cse-key').value      = s.cseKey      || '';
-      document.getElementById('input-cse-id').value       = s.cseId       || '';
-    };
+      document.getElementById('input-cse-key').value = s.cseKey || '';
+      document.getElementById('input-cse-id').value  = s.cseId  || '';
 
-    document.getElementById('btn-settings').addEventListener('click', () => {
-      fillFields();
       window.UI.openModal('settings-modal');
     });
 
-    // Test OpenRouter Key button
+    // Test OpenRouter button
     document.getElementById('btn-test-openrouter').addEventListener('click', async () => {
       const btn = document.getElementById('btn-test-openrouter');
       const key = document.getElementById('input-openrouter-key').value.trim();
@@ -225,25 +295,29 @@ window.App = {
   },
 
   init() {
-    // Topbar
-    document.getElementById('btn-back').addEventListener('click', () => history.back());
-    document.getElementById('topbar-logo').addEventListener('click', () => this.navigate('#home'));
+    // Topbar navigation
+    document.getElementById('btn-back')?.addEventListener('click', () => history.back());
+    document.getElementById('topbar-logo')?.addEventListener('click', () => this.navigate('#home'));
+    document.getElementById('nav-home')?.addEventListener('click', () => this.navigate('#home'));
+    document.getElementById('nav-stories')?.addEventListener('click', () => this.navigate('#list'));
+    document.getElementById('nav-new')?.addEventListener('click', () => this.navigate('#setup'));
 
     // Home buttons
-    document.getElementById('btn-new-rp').addEventListener('click', () => this.navigate('#setup'));
-    document.getElementById('btn-continue-rp').addEventListener('click', () => this.navigate('#list'));
+    document.getElementById('btn-new-rp')?.addEventListener('click', () => this.navigate('#setup'));
+    document.getElementById('btn-continue-rp')?.addEventListener('click', () => this.navigate('#list'));
 
     // Lightbox close
-    document.getElementById('lightbox').addEventListener('click', () => {
+    document.getElementById('lightbox')?.addEventListener('click', () => {
       document.getElementById('lightbox').classList.remove('open');
     });
 
     // Drawer overlay
-    document.getElementById('edit-drawer-overlay').addEventListener('click', () => window.UI.closeDrawer());
+    document.getElementById('edit-drawer-overlay')?.addEventListener('click', () => window.UI.closeDrawer());
 
-    // List page "new" button (re-navigates)
+    // List page "new" button
     document.getElementById('btn-list-new')?.addEventListener('click', () => this.navigate('#setup'));
 
+    this.initAuth();
     this.initSettings();
 
     window.addEventListener('hashchange', () => this.handleRoute());

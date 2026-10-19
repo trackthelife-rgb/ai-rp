@@ -37,6 +37,9 @@ window.SetupView = {
 
   showStep(step) {
     this.currentStep = step;
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.setup-step').forEach((s, i) => {
       s.classList.remove('active', 'done');
@@ -82,8 +85,14 @@ window.SetupView = {
           <input type="text" id="char-name-${i}" placeholder="e.g. Priya" value="${esc(c?.name || '')}">
         </div>
         <div class="field-group">
-          <label class="field-label">Actress Name (for image search)</label>
+          <label class="field-label">Actress Name (for Pinterest image search)</label>
           <input type="text" id="char-actress-${i}" placeholder="e.g. Deepika Padukone" value="${esc(c?.actressName || '')}">
+          <div class="actress-suggestions">
+            <span style="font-size:0.7rem;color:var(--text-faint);margin-right:0.2rem">Quick Pick:</span>
+            ${['Keerthy Suresh', 'Samantha', 'Nayanthara', 'Sreeleela', 'Rashmika', 'Pooja Hegde', 'Deepika Padukone', 'Tamannaah'].map(name => `
+              <button type="button" class="actress-chip" data-name="${name}" data-idx="${i}">+ ${name}</button>
+            `).join('')}
+          </div>
         </div>
         <div class="field-group" style="margin-bottom:0">
           <label class="field-label">Personality / Character Arc</label>
@@ -91,6 +100,17 @@ window.SetupView = {
         </div>
       `;
       container.appendChild(card);
+
+      card.querySelectorAll('.actress-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const actressInput = card.querySelector(`#char-actress-${btn.dataset.idx}`);
+          if (actressInput) {
+            actressInput.value = btn.dataset.name;
+            actressInput.focus();
+            window.UI.toast(`Selected ${btn.dataset.name} 🎬`, 'info', 1800);
+          }
+        });
+      });
 
       const nameInput = card.querySelector(`#char-name-${i}`);
       const avatar    = card.querySelector(`#char-avatar-${i}`);

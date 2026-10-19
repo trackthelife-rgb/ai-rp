@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Roleplay AI — Immersive AI Storytelling</title>
-  <meta name="description" content="Create immersive AI-powered roleplays with your favourite characters. Powered by Grok AI.">
-  <link rel="preload" as="image" href="assets/bg.jpg">
+  <meta name="description" content="Create immersive AI-powered roleplays with your favourite characters.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -14,25 +16,38 @@
      TOPBAR
 ══════════════════════════════════════ -->
 <header class="topbar">
-  <div class="topbar-logo" id="topbar-logo" style="cursor:pointer">
-    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="url(#lg1)" opacity=".15"/>
-      <path d="M9 10c0-1.105.895-2 2-2h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1l-2 3-2-3H11a2 2 0 0 1-2-2v-2z" fill="url(#lg1)"/>
-      <circle cx="14" cy="20" r="2" fill="url(#lg2)" opacity=".7"/>
-      <defs>
-        <linearGradient id="lg1" x1="8" y1="8" x2="20" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
-        </linearGradient>
-        <linearGradient id="lg2" x1="12" y1="18" x2="16" y2="22" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    Roleplay AI
+  <div class="topbar-left">
+    <div class="topbar-logo" id="topbar-logo" style="cursor:pointer">
+      <div class="logo-icon-wrap">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="url(#lg1)" opacity=".15"/>
+          <path d="M9 10c0-1.105.895-2 2-2h6a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1l-2 3-2-3H11a2 2 0 0 1-2-2v-2z" fill="url(#lg1)"/>
+          <circle cx="14" cy="20" r="2" fill="url(#lg2)" opacity=".7"/>
+          <defs>
+            <linearGradient id="lg1" x1="8" y1="8" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
+            </linearGradient>
+            <linearGradient id="lg2" x1="12" y1="18" x2="16" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#c084fc"/><stop offset="1" stop-color="#f472b6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="logo-text">Roleplay AI</span>
+    </div>
+
+    <nav class="topbar-nav">
+      <button class="nav-link active" id="nav-home">Home</button>
+      <button class="nav-link" id="nav-stories">Stories</button>
+      <button class="nav-link nav-link-cta" id="nav-new">+ New Story</button>
+    </nav>
   </div>
+
   <div class="topbar-actions">
     <button class="btn btn-ghost btn-sm" id="btn-back" style="display:none">← Back</button>
-    <button class="btn btn-ghost btn-sm" id="btn-settings">⚙ Settings</button>
+    <!-- User Account Widget (Injected by UI.renderUserWidget()) -->
+    <div class="user-widget" id="user-widget"></div>
+    <button class="btn btn-ghost btn-sm btn-icon-gear" id="btn-settings" title="Settings">⚙ Settings</button>
   </div>
 </header>
 
@@ -77,6 +92,9 @@
           <p class="text-muted" style="margin-top:.3rem;font-size:.9rem">Continue an existing roleplay or start a new one.</p>
         </div>
         <button class="btn btn-primary" id="btn-list-new">+ New Roleplay</button>
+      </div>
+      <div class="list-search-wrap" style="margin-bottom:1.5rem">
+        <input type="text" id="input-search-stories" placeholder="🔍 Search stories by title or actress name...">
       </div>
       <div class="rp-grid" id="rp-grid"></div>
       <div id="rp-empty" class="empty-state" style="display:none">
@@ -195,6 +213,58 @@
   </div>
 
 </div><!-- /#app -->
+
+<!-- ══════════════════════════════════════
+     AUTH MODAL (Sign In & Sign Up)
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal auth-modal-box">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:0.5rem">
+        <span class="auth-icon-badge">👑</span>
+        <span id="auth-modal-title">Sign In to Roleplay AI</span>
+      </div>
+      <button class="modal-close" onclick="window.UI.closeModal('auth-modal')">✕</button>
+    </div>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="auth-tab-login">Sign In</button>
+      <button type="button" class="auth-tab" id="auth-tab-signup">Create Account</button>
+    </div>
+
+    <p class="auth-desc" id="auth-desc">
+      Your stories and character progress are safely stored under your personal account.
+    </p>
+
+    <form id="auth-form" style="margin-top:1.25rem">
+      <div class="field-group" id="group-auth-name" style="display:none">
+        <label class="field-label" for="auth-input-name">Your Display Name</label>
+        <input type="text" id="auth-input-name" placeholder="e.g. Master" autocomplete="name">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="auth-input-email">Email Address</label>
+        <input type="email" id="auth-input-email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="auth-input-password">Password</label>
+        <div style="position:relative">
+          <input type="password" id="auth-input-password" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" id="btn-toggle-auth-pw" class="pw-eye-btn">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary auth-submit-btn" id="btn-auth-submit" style="width:100%;padding:0.85rem;font-size:0.95rem;margin-top:0.5rem">
+        Sign In →
+      </button>
+
+      <div class="auth-switch-note" id="auth-switch-note" style="margin-top:1rem;text-align:center;font-size:0.82rem;color:var(--text-muted)">
+        Don't have an account yet? <a href="javascript:void(0)" id="link-switch-auth" style="color:var(--accent);font-weight:600">Sign up for free</a>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════
      SETTINGS MODAL
@@ -339,11 +409,19 @@
 </div>
 
 <!-- ══════════════════════════════════════
-     LIGHTBOX
+     LIGHTBOX (INTERACTIVE HD GALLERY)
 ══════════════════════════════════════ -->
 <div class="lightbox" id="lightbox">
-  <img src="" alt="Preview">
-  <div class="lightbox-label"></div>
+  <button class="lightbox-close" id="lightbox-close" title="Close (Esc)">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev" title="Previous Image (← Left Arrow)">❮</button>
+  <div class="lightbox-content">
+    <img src="" id="lightbox-img" alt="Preview" referrerpolicy="no-referrer">
+    <div class="lightbox-footer">
+      <span class="lightbox-label" id="lightbox-label"></span>
+      <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+    </div>
+  </div>
+  <button class="lightbox-nav lightbox-next" id="lightbox-next" title="Next Image (→ Right Arrow)">❯</button>
 </div>
 
 <!-- ══════════════════════════════════════

@@ -84,28 +84,82 @@ window.PlayView = {
       ${this.renderImages(msg.images)}
     `;
 
-    div.querySelectorAll('.msg-img-item img').forEach(img => {
-      img.addEventListener('click', () => window.UI.openLightbox(img.src, img.alt));
+    // Wire gallery scroll buttons
+    div.querySelectorAll('.msg-gallery-container').forEach(gallery => {
+      const scrollBox = gallery.querySelector('.msg-images');
+      const prevBtn = gallery.querySelector('.gallery-prev');
+      const nextBtn = gallery.querySelector('.gallery-next');
+      prevBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scrollBox?.scrollBy({ left: -300, behavior: 'smooth' });
+      });
+      nextBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scrollBox?.scrollBy({ left: 300, behavior: 'smooth' });
+      });
     });
+
+    // Wire clicks to open Lightbox with gallery navigation
+    const imgItems = Array.from(div.querySelectorAll('.msg-img-item'));
+    if (imgItems.length > 0) {
+      const galleryItems = imgItems.map(item => ({
+        url: item.dataset.fullUrl || item.querySelector('img')?.src || '',
+        label: item.dataset.label || item.querySelector('img')?.alt || ''
+      }));
+
+      imgItems.forEach((item, idx) => {
+        item.addEventListener('click', () => {
+          window.UI.openLightbox(galleryItems, idx);
+        });
+      });
+    }
+
     chatEl.appendChild(div);
   },
 
   renderImages(images) {
     if (!images || images.length === 0) return '';
     const esc = window.UI.escHtml.bind(window.UI);
-    const items = images.flatMap(g =>
-      (g.images || []).map(img => `
-        <div class="msg-img-item">
-          <img src="${esc(img.url)}" alt="${esc(g.actressName)} ${esc(g.bodyPart)}"
-               title="Click to enlarge — ${esc(g.actressName)} (${esc(g.bodyPart)})"
-               loading="lazy" onerror="this.parentElement.style.display='none'">
-          <div class="msg-img-label">${esc(g.actressName)} · ${esc(g.bodyPart)}</div>
-        </div>
-      `)
-    ).join('');
+    const flatList = [];
 
-    if (!items) return '';
-    return `<div class="msg-images">${items}</div>`;
+    images.forEach(g => {
+      (g.images || []).forEach(img => {
+        // Upgrade Pinterest images to 736x for crystal-clear HD resolution
+        const hdUrl = (img.url || '').replace('/236x/', '/736x/').replace('/474x/', '/736x/');
+        flatList.push({
+          url: hdUrl,
+          label: `${g.actressName} · ${g.bodyPart}`
+        });
+      });
+    });
+
+    if (flatList.length === 0) return '';
+
+    const items = flatList.map((item, idx) => `
+      <div class="msg-img-item" data-index="${idx}" data-full-url="${esc(item.url)}" data-label="${esc(item.label)}">
+        <div class="msg-img-thumb-wrap">
+          <img src="${esc(item.url)}" alt="${esc(item.label)}"
+               referrerpolicy="no-referrer"
+               data-orig="${esc(item.thumb || item.url)}"
+               title="Click to view full HD size — ${esc(item.label)}"
+               loading="lazy"
+               onerror="if(!this.dataset.fallback && this.dataset.orig && this.src !== this.dataset.orig){this.dataset.fallback='1';this.src=this.dataset.orig;}else{this.closest('.msg-img-item').style.display='none';}">
+          <div class="msg-img-hover-overlay">
+            <span class="hover-zoom-btn">🔍 View Full HD</span>
+          </div>
+        </div>
+        <div class="msg-img-label">${esc(item.label)}</div>
+      </div>
+    `).join('');
+
+    const showNav = flatList.length > 1;
+    return `
+      <div class="msg-gallery-container ${showNav ? 'has-nav' : ''}">
+        ${showNav ? '<button type="button" class="gallery-scroll-btn gallery-prev" title="Scroll left">‹</button>' : ''}
+        <div class="msg-images">${items}</div>
+        ${showNav ? '<button type="button" class="gallery-scroll-btn gallery-next" title="Scroll right">›</button>' : ''}
+      </div>
+    `;
   },
 
   appendSystem(text, animate = true) {

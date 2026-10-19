@@ -33,32 +33,44 @@ window.ImageSearch = {
     return [...new Set(unique.map(m => map[m] || m))];
   },
 
-  // Helper to determine the correct Pinterest API endpoint
-  getPinterestEndpoint(actress, bodyPart) {
-    const params = `actress=${encodeURIComponent(actress)}&part=${encodeURIComponent(bodyPart)}`;
-    // If running on a live web server (https://... or http://... like Vercel)
-    if (window.location.protocol.startsWith('http')) {
-      return `/api/pinterest?${params}`;
-    }
-    // Fallback when opened directly as file:/// in browser
-    return `http://localhost:3333/api/pinterest?${params}`;
-  },
-
-  // Query Pinterest helper server (real Pinterest photos)
+  // Query Pinterest helper server with automatic cloud fallback
   async searchPinterestServer(actress, bodyPart) {
-    try {
-      const endpoint = this.getPinterestEndpoint(actress, bodyPart);
-      const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return (data.images || []).map(img => ({
-        url: img.url,
-        thumb: img.thumb || img.url,
-        title: img.title
-      }));
-    } catch (_) {
-      return [];
+    const params = `actress=${encodeURIComponent(actress)}&part=${encodeURIComponent(bodyPart)}`;
+    const endpoints = [];
+
+    // 1. Relative endpoint when hosted on HTTP/HTTPS
+    if (window.location.protocol.startsWith('http')) {
+      endpoints.push(`/api/pinterest?${params}`);
     }
+    // 2. Local helper server if running
+    endpoints.push(`http://localhost:3333/api/pinterest?${params}`);
+    // 3. Live 24/7 Vercel cloud server (ensures file:/// always works!)
+    endpoints.push(`https://ai-rp-taupe.vercel.app/api/pinterest?${params}`);
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.images && data.images.length > 0) {
+            return data.images.map(img => {
+              const rawUrl = img.url || '';
+              const hdUrl = rawUrl.includes('pinimg.com')
+                ? rawUrl.replace('/236x/', '/736x/').replace('/474x/', '/736x/')
+                : rawUrl;
+              return {
+                url: hdUrl,
+                thumb: img.thumb || rawUrl,
+                title: img.title || `${actress} ${bodyPart}`
+              };
+            });
+          }
+        }
+      } catch (_) {
+        // try next endpoint in list
+      }
+    }
+    return [];
   },
 
   detectPartsForCharacter(text, charName, allParts) {

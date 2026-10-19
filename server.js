@@ -37,9 +37,10 @@ async function searchPinterest(actress, bodyPart) {
           const raw = '{' + match[1].replace(/&quot;/g, '"') + '}';
           const obj = JSON.parse(raw);
           if (obj.murl) {
+            const cleanUrl = (obj.murl || '').replace('/236x/', '/736x/').replace('/474x/', '/736x/');
             results.push({
-              url: obj.murl,
-              thumb: obj.turl || obj.murl,
+              url: cleanUrl,
+              thumb: cleanUrl,
               title: obj.desc || `${actress} ${bodyPart}`,
               source: obj.purl || ''
             });
