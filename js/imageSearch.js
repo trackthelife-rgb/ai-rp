@@ -108,7 +108,6 @@ window.ImageSearch = {
             images: [randomImg]
           });
           found = true;
-          break; // 1 picture per character
         }
       }
 
