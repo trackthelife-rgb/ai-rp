@@ -211,7 +211,7 @@ window.PlayView = {
       // Collect Pinterest images found for each character
       const allImageResults = await pinterestPromise;
 
-      const femaleChars = (this.currentRp.characters || []).filter(c => c.gender === 'female');
+      const femaleChars = (this.currentRp.characters || []).filter(c => (c.actressName || c.name) && c.gender !== 'male');
       const characterReplies = this.splitCharacterReplies(aiText, femaleChars);
 
       for (const rep of characterReplies) {
@@ -221,7 +221,7 @@ window.PlayView = {
           img.actressName.toLowerCase() === rep.actressName.toLowerCase()
         );
 
-        if (repImages.length === 0 && characterReplies.length === 1) {
+        if (repImages.length === 0) {
           repImages = allImageResults;
         }
 

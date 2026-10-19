@@ -5,7 +5,7 @@
 
 window.AI = {
   buildSystemPrompt(rp) {
-    const femaleChars = (rp.characters || []).filter(c => c.gender === 'female');
+    const femaleChars = (rp.characters || []).filter(c => (c.actressName || c.name) && c.gender !== 'male');
     const isMultiChar = femaleChars.length > 1;
     const charLines = femaleChars
       .map(c => `• ${c.name} (inspired by actress ${c.actressName}): ${c.arc}`)

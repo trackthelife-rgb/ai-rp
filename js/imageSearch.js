@@ -77,18 +77,22 @@ window.ImageSearch = {
 
   // Strictly search Pinterest for each active female character in the scene
   async searchForMessage(text, characters) {
-    const femaleChars = (characters || []).filter(c => c.gender === 'female' && c.actressName);
-    if (femaleChars.length === 0) return [];
+    const femaleChars = (characters || []).filter(c => (c.actressName || c.name) && c.gender !== 'male');
+    if (femaleChars.length === 0) {
+      console.warn('[ImageSearch] No characters found to search images for');
+      return [];
+    }
 
     const lower = (text || '').toLowerCase();
     const mentioned = femaleChars.filter(c => lower.includes(c.name.toLowerCase()));
     const targetChars = mentioned.length > 0 ? mentioned : femaleChars;
 
     const allParts = this.detectBodyParts(text);
+    console.log('[ImageSearch] Target chars:', targetChars.map(c => c.name), 'Detected parts:', allParts);
     const results = [];
 
     for (const char of targetChars) {
-      const actress = char.actressName.trim();
+      const actress = (char.actressName || char.name || '').trim();
       const charParts = this.detectPartsForCharacter(text, char.name, allParts);
       let found = false;
 
