@@ -168,9 +168,9 @@ window.UI = {
           </button>
         </div>
       `;
-      document.getElementById('btn-user-logout')?.addEventListener('click', (e) => {
+      document.getElementById('btn-user-logout')?.addEventListener('click', async (e) => {
         e.stopPropagation();
-        window.Storage.logout();
+        await window.Storage.logout();
         this.renderUserWidget();
         this.toast('Signed out successfully 👋', 'info');
         window.App.handleRoute();

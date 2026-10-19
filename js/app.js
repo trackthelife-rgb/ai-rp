@@ -108,28 +108,40 @@ window.App = {
       document.getElementById('btn-toggle-auth-pw').textContent = isPass ? '🔒' : '👁';
     });
 
-    form?.addEventListener('submit', (e) => {
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('auth-input-email').value.trim();
       const pass  = document.getElementById('auth-input-password').value.trim();
       const name  = document.getElementById('auth-input-name')?.value.trim();
+      const submitBtn = document.getElementById('auth-btn-submit');
+      const originalText = submitBtn?.textContent || 'Continue';
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = mode === 'signup' ? 'Creating Account…' : 'Signing In…';
+      }
 
       try {
         if (mode === 'signup') {
-          const user = window.Storage.signUp(email, pass, name);
+          const user = await window.Storage.signUp(email, pass, name);
           window.UI.closeModal('auth-modal');
           window.UI.renderUserWidget();
-          window.UI.toast(`Welcome, ${user.name}! Account created and roleplays synced 🎭`, 'success', 4000);
+          window.UI.toast(`Welcome, ${user.name}! Account created and synced to cloud ☁️`, 'success', 4000);
         } else {
-          const user = window.Storage.login(email, pass);
+          const user = await window.Storage.login(email, pass);
           window.UI.closeModal('auth-modal');
           window.UI.renderUserWidget();
-          window.UI.toast(`Welcome back, ${user.name}! Stories loaded 📖`, 'success', 4000);
+          window.UI.toast(`Welcome back, ${user.name}! Stories synced from cloud ☁️`, 'success', 4000);
         }
         form.reset();
         this.handleRoute();
       } catch (err) {
-        window.UI.toast(err.message, 'error', 5000);
+        window.UI.toast(err.message, 'error', 5500);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
       }
     });
 
